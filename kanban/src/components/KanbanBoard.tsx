@@ -1,7 +1,10 @@
 import { Column, Id } from "../Type";
 import PlusIcon from "../icons/PlusIcon";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ColumnConatainer from "./ColumnConatainer";
+import { DndContext, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { SortableContext } from "@dnd-kit/sortable";
+import { createPortal } from "react-dom";
 
 function generateId() {
   return Math.floor(Math.random() * 10001);
@@ -9,6 +12,8 @@ function generateId() {
 
 function KanbanBoard() {
   const [column, setColumn] = useState<Column[]>([]);
+  const columnIds = useMemo(() => column.map((col) => col.id), [column]);
+  const [activeColumn, setActiveColumn] = useState<Column | null>(null);
   console.log(column);
   function createNewColumn() {
 
@@ -25,6 +30,13 @@ function KanbanBoard() {
     setColumn(filteredColumn);
   }
 
+  function onDragStart(event: DragStartEvent) {
+    if(event.active.data.current?.type === "Column") {
+      setActiveColumn(event.active.data.current.column);
+      return;
+    }
+  }
+
   return (
     <div
     className="
@@ -37,8 +49,9 @@ function KanbanBoard() {
     overflow-y-hidden
     px-[40px]
     ">
+      <DndContext onDragStart={onDragStart}>
       <div className="m-auto">
-      <button 
+        <button 
         onClick={() => {
           createNewColumn();
         }}
@@ -58,13 +71,21 @@ function KanbanBoard() {
         ">
           <PlusIcon/>  Add Column
         </button>
-     <div className="flex gap-2">
-        {
-          column.map((col)=>(<ColumnConatainer key={col.id} column={col} deleteColumn={deleteColumn}/>))
-        }
-     </div>
-       
+        <div className="flex gap-2">
+          <SortableContext items={columnIds}>
+
+            {
+              column.map((col)=>(<ColumnConatainer key={col.id} column={col} deleteColumn={deleteColumn}/>))
+            }
+          </SortableContext>
+        </div>       
       </div>
+      {createPortal(
+        <DragOverlay>
+        {activeColumn && <ColumnConatainer column={activeColumn} deleteColumn={deleteColumn}></ColumnConatainer>}
+      </DragOverlay>, document.body
+      )}
+      </DndContext>
     </div>
   )
 }
