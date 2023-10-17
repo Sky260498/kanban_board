@@ -1,4 +1,4 @@
-import { Column, Id } from "../Type";
+import { Column, Id, Task } from "../Type";
 import PlusIcon from "../icons/PlusIcon";
 import { useMemo, useState } from "react";
 import ColumnConatainer from "./ColumnConatainer";
@@ -11,27 +11,40 @@ function generateId() {
 }
 
 function KanbanBoard() {
-  const [column, setColumn] = useState<Column[]>([]);
-  const columnIds = useMemo(() => column.map((col) => col.id), [column]);
+  const [tasks, setTask] = useState<Task[]>([]);
+  const [columns, setColumn] = useState<Column[]>([]);
+  const columnIds = useMemo(() => columns.map((col) => col.id), [columns]);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
 
   function createNewColumn() {
-
     const columnToAdd: Column = {
       id: generateId(),
-      title: `Column ${column.length + 1}`
+      title: `Column ${columns.length + 1}`
     };
     
-    setColumn([...column, columnToAdd]);
+    setColumn([...columns, columnToAdd]);
+  }
+
+  function createNewTask(columnId: Id) {
+    const taskToAdd: Task = {
+      id: generateId(),
+      columnId: columnId,
+      title: "Task Title",
+      description: "Task Description",
+      priority: "low"
+    };
+    
+    setTask([...tasks, taskToAdd]);
+    console.log(tasks);
   }
 
   function deleteColumn(id: Id) {
-    const filteredColumn = column.filter((col)=> col.id!==id);
+    const filteredColumn = columns.filter((col)=> col.id!==id);
     setColumn(filteredColumn);
   }
 
   function updateTitle(id: Id, title: string) {
-    const newColumn = column.map(col => {
+    const newColumn = columns.map(col => {
       if(col.id !== id) return col;
       return {...col, title};
     });
@@ -107,16 +120,15 @@ function KanbanBoard() {
         </button>
         <div className="flex gap-2">
           <SortableContext items={columnIds}>
-
             {
-              column.map((col)=>(<ColumnConatainer key={col.id} column={col} deleteColumn={deleteColumn} updateTitle={updateTitle}/>))
+              columns.map((col)=>(<ColumnConatainer key={col.id} column={col} deleteColumn={deleteColumn} updateTitle={updateTitle} createTask={createNewTask} tasks={tasks.filter((task)=> task.columnId === col.id)}/>))
             }
           </SortableContext>
         </div>       
       </div>
       {createPortal(
         <DragOverlay>
-        {activeColumn && <ColumnConatainer column={activeColumn} deleteColumn={deleteColumn} updateTitle={updateTitle}></ColumnConatainer>}
+        {activeColumn && <ColumnConatainer column={activeColumn} deleteColumn={deleteColumn} updateTitle={updateTitle} createTask={createNewTask} tasks={tasks}></ColumnConatainer>}
       </DragOverlay>, document.body
       )}
       </DndContext>

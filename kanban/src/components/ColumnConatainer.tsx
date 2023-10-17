@@ -1,18 +1,21 @@
 import { useSortable } from "@dnd-kit/sortable";
-import { Column, Id } from "../Type"
+import { Column, Id, Task } from "../Type"
 import DeleteIcon from "../icons/DeleteIcon";
 import { CSS } from "@dnd-kit/utilities"
 import { useState } from "react";
-
+import PlusIcon from "../icons/PlusIcon";
+import TaskCard from "./TaskCard";
 
 interface Props {
     column: Column,
     deleteColumn: (id:Id) => void;
     updateTitle: (id:Id, title: string) => void;
+    createTask: (columnId:Id) => void;
+    tasks: Task[];
 }
 
 function ColumnConatainer(props: Props) {
-    const {column, deleteColumn, updateTitle} = props;
+    const {column, deleteColumn, updateTitle, createTask, tasks} = props;
     const [editMode, setEditMode] = useState(false);
     const {setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: column.id,
@@ -39,12 +42,12 @@ function ColumnConatainer(props: Props) {
     <div 
     ref={setNodeRef}
     style={style}
-    className="text-white bg-columnBackgroundColor w-[350px] h-[500px] my-4 p-1 rounded-md flex flex-col">
+    className="text-white bg-columnBackgroundColor w-[350px] min-h-[500px] my-4 p-1 rounded-md flex flex-col">
         <div onClick={()=>{
             setEditMode(true);
         }} {...attributes} {...listeners} className="flex items-center gap-2 p-3 bg-mainBackgroundColor rounded-md">
             <div className="bg-columnBackgroundColor py-1 px-2 rounded-md">
-                0
+                {tasks.length}
             </div>
             <div>
                 {!editMode && column.title}
@@ -60,11 +63,14 @@ function ColumnConatainer(props: Props) {
             </button>
         </div>
         <div className="flex-1">
-            content
+            {
+                tasks.map(task => <TaskCard key={task.id} task={task}/>)
+            }
         </div>
-        <div className="mt-auto">
-            Footer
-        </div>
+        <button className="mt-auto flex items-center p-3 justify-center bg-mainBackgroundColor rounded-md hover:bg-black" onClick={() => createTask(column.id)}>
+            <PlusIcon />
+            <span className="mx-1">Add Task</span>
+        </button>
     </div>
   )
 }
