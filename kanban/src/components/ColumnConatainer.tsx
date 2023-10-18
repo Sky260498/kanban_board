@@ -1,8 +1,8 @@
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { Column, Id, Task } from "../Type"
 import DeleteIcon from "../icons/DeleteIcon";
 import { CSS } from "@dnd-kit/utilities"
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import PlusIcon from "../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 
@@ -12,11 +12,15 @@ interface Props {
     updateTitle: (id:Id, title: string) => void;
     createTask: (columnId:Id) => void;
     tasks: Task[];
+    deleteTask: (id:Id) => void;
+    updateTaskTitle: (id:Id, title:string) => void;
+    updateTaskDescription: (id:Id, description:string) => void;
 }
 
 function ColumnConatainer(props: Props) {
-    const {column, deleteColumn, updateTitle, createTask, tasks} = props;
+    const {column, deleteColumn, updateTitle, createTask, tasks, deleteTask, updateTaskTitle, updateTaskDescription} = props;
     const [editMode, setEditMode] = useState(false);
+    const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
     const {setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: column.id,
         data: {
@@ -63,9 +67,11 @@ function ColumnConatainer(props: Props) {
             </button>
         </div>
         <div className="flex-1">
+            <SortableContext items={taskIds}>
             {
-                tasks.map(task => <TaskCard key={task.id} task={task}/>)
+                tasks.map(task => <TaskCard key={task.id} task={task} deleteTask={deleteTask} updateTaskTitle={updateTaskTitle} updateTaskDescription={updateTaskDescription}/>)
             }
+            </SortableContext>
         </div>
         <button className="mt-auto flex items-center p-3 justify-center bg-mainBackgroundColor rounded-md hover:bg-black" onClick={() => createTask(column.id)}>
             <PlusIcon />
